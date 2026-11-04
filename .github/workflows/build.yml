@@ -1,0 +1,35 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Build
+        run: go build ./...
+      - name: Format
+        run: test -z "$(gofmt -l .)"
+      - name: Vet
+        run: go vet ./...
+      - name: Test
+        run: go test ./...
+      - name: Smoke test
+        run: |
+          go build -o bin/ ./cmd/...
+          bin/vcl -c testdata/smoke.vcl -o /tmp/smoke.vo
+          bin/vcl-objdump -d /tmp/smoke.vo | grep -q 'add.xyzw'
+      - name: Cross-compile
+        env:
+          CGO_ENABLED: 0
+        run: |
+          GOOS=windows GOARCH=amd64 go build ./cmd/...
+          GOOS=darwin GOARCH=arm64 go build ./cmd/...
