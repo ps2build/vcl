@@ -62,3 +62,7 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*.zip
+      - name: Update manifest
+        env:
+          GH_TOKEN: ${{ secrets.MANIFEST_DISPATCH_TOKEN }}
+        run: gh api repos/ps2build/manifest/dispatches -f event_type=component-released
